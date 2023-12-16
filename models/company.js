@@ -66,7 +66,6 @@ class Company {
     let whereExpressions = [];
     let queryValues = [];
   
-    // Existing logic for adding filters to the query
     if (filters.name) {
       queryValues.push(`%${filters.name}%`);
       whereExpressions.push(`name ILIKE $${queryValues.length}`);
@@ -88,11 +87,9 @@ class Company {
   
     query += " ORDER BY name";
 
-    // Add console logs for debugging
     console.log("Final query:", query);
     console.log("Query values:", queryValues);
 
-    // Execute the query and return the result
     const companiesRes = await db.query(query, queryValues);
     return companiesRes.rows;
 }

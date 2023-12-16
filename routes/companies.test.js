@@ -100,7 +100,7 @@ describe("GET /companies", function () {
     const response = await request(app).get("/companies?minEmployees=500");
     expect(response.body).toEqual({
       companies: [
-        // Companies from your seed data with num_employees >= 500
+        // Companies from seed data with num_employees >= 500
       ]
     });
   });

@@ -1,0 +1,12 @@
+# Environment variables
+.env
+.env.test
+.env.production
+
+# Dependency directories
+node_modules/
+
+# Jest setup
+jest.setup.js
+
+

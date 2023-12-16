@@ -66,33 +66,82 @@ describe("POST /companies", function () {
 /************************************** GET /companies */
 
 describe("GET /companies", function () {
-  test("ok for anon", async function () {
-    const resp = await request(app).get("/companies");
-    expect(resp.body).toEqual({
-      companies:
-          [
-            {
-              handle: "c1",
-              name: "C1",
-              description: "Desc1",
-              numEmployees: 1,
-              logoUrl: "http://c1.img",
-            },
-            {
-              handle: "c2",
-              name: "C2",
-              description: "Desc2",
-              numEmployees: 2,
-              logoUrl: "http://c2.img",
-            },
-            {
-              handle: "c3",
-              name: "C3",
-              description: "Desc3",
-              numEmployees: 3,
-              logoUrl: "http://c3.img",
-            },
-          ],
+  test("works with no filters", async function () {
+    const response = await request(app).get("/companies");
+    expect(response.statusCode).toEqual(200);
+    expect(response.body).toEqual({
+      companies: [
+        {
+          handle: "c1",
+          name: "C1",
+          description: "Desc1",
+          numEmployees: 1,
+          logoUrl: "http://c1.img"
+        },
+        {
+          handle: "c2",
+          name: "C2",
+          description: "Desc2",
+          numEmployees: 2,
+          logoUrl: "http://c2.img"
+        },
+        {
+          handle: "c3",
+          name: "C3",
+          description: "Desc3",
+          numEmployees: 3,
+          logoUrl: "http://c3.img"
+        },
+      ]
+    });
+  });
+
+  test("works with minEmployees filter", async function () {
+    const response = await request(app).get("/companies?minEmployees=500");
+    expect(response.body).toEqual({
+      companies: [
+        // Companies from your seed data with num_employees >= 500
+      ]
+    });
+  });
+
+  test("works with maxEmployees filter", async function () {
+    const response = await request(app).get("/companies?maxEmployees=1000");
+    expect(response.body).toEqual({
+      companies: [
+        {
+          handle: "c1",
+          name: "C1",
+          description: "Desc1",
+          numEmployees: 1,
+          logoUrl: "http://c1.img"
+        },
+        {
+          handle: "c2",
+          name: "C2",
+          description: "Desc2",
+          numEmployees: 2,
+          logoUrl: "http://c2.img"
+        },
+        {
+          handle: "c3",
+          name: "C3",
+          description: "Desc3",
+          numEmployees: 3,
+          logoUrl: "http://c3.img"
+        },
+      ]
+    });
+  });
+
+  test("bad request if minEmployees > maxEmployees", async function () {
+    const response = await request(app).get("/companies?minEmployees=50&maxEmployees=10");
+    expect(response.statusCode).toEqual(400);
+    expect(response.body).toEqual({
+      error: {
+        message: "minEmployees cannot be greater than maxEmployees",
+        status: 400
+      }
     });
   });
 

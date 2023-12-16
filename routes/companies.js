@@ -2,10 +2,11 @@
 
 /** Routes for companies. */
 
+
 const jsonschema = require("jsonschema");
 const express = require("express");
 
-const { BadRequestError } = require("../expressError");
+const { ExpressError, BadRequestError } = require('../helpers/expressError');
 const { ensureLoggedIn } = require("../middleware/auth");
 const Company = require("../models/company");
 
@@ -52,12 +53,21 @@ router.post("/", ensureLoggedIn, async function (req, res, next) {
 
 router.get("/", async function (req, res, next) {
   try {
-    const companies = await Company.findAll();
+    const filters = req.query;
+    console.log("Filters received:", filters);
+
+    if (filters.minEmployees && filters.maxEmployees && +filters.minEmployees > +filters.maxEmployees) {
+      throw new ExpressError("minEmployees cannot be greater than maxEmployees", 400);
+    }
+
+    const companies = await Company.findAll(filters);
     return res.json({ companies });
   } catch (err) {
+    console.error("Error in GET /companies:", err);
     return next(err);
   }
 });
+
 
 /** GET /[handle]  =>  { company }
  *

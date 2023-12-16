@@ -7,7 +7,7 @@ const {
   NotFoundError,
   BadRequestError,
   UnauthorizedError,
-} = require("../expressError");
+} = require("../helpers/expressError.js");
 
 const { BCRYPT_WORK_FACTOR } = require("../config.js");
 

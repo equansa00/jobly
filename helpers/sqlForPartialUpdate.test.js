@@ -1,5 +1,5 @@
-const { sqlForPartialUpdate } = require("../sql");
-const { BadRequestError } = require("../../expressError");
+const { sqlForPartialUpdate } = require("./sql");
+const { BadRequestError } = require("./expressError");
 
 describe("sqlForPartialUpdate", () => {
   test("works: valid data and jsToSql mapping", () => {

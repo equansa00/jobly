@@ -1,7 +1,7 @@
 "use strict";
 
 const jwt = require("jsonwebtoken");
-const { UnauthorizedError } = require("../expressError");
+const { UnauthorizedError } = require("../helpers/expressError");
 const {
   authenticateJWT,
   ensureLoggedIn,

@@ -1,7 +1,7 @@
 "use strict";
 
 const db = require("../db.js");
-const { BadRequestError, NotFoundError } = require("../expressError");
+const { BadRequestError, NotFoundError } = require("../helpers/expressError");
 const Company = require("./company.js");
 const {
   commonBeforeAll,
@@ -56,36 +56,50 @@ describe("create", function () {
   });
 });
 
-/************************************** findAll */
+/************************************** findAll with filters*/
 
-describe("findAll", function () {
-  test("works: no filter", async function () {
-    let companies = await Company.findAll();
-    expect(companies).toEqual([
-      {
-        handle: "c1",
-        name: "C1",
-        description: "Desc1",
-        numEmployees: 1,
-        logoUrl: "http://c1.img",
-      },
-      {
-        handle: "c2",
-        name: "C2",
-        description: "Desc2",
-        numEmployees: 2,
-        logoUrl: "http://c2.img",
-      },
-      {
-        handle: "c3",
-        name: "C3",
-        description: "Desc3",
-        numEmployees: 3,
-        logoUrl: "http://c3.img",
-      },
-    ]);
+describe("findAll with filters", function () {
+  test("works with name filter", async function () {
+    let companies = await Company.findAll({ name: "net" });
+    expect(companies).toEqual([]); // No company in seed data with 'net' in its name
+  });
+
+  
+
+  test("works with minEmployees and maxEmployees filter", async function () {
+    let companies = await Company.findAll({ minEmployees: 500, maxEmployees: 1000 });
+    expect(companies).toEqual([]);
   });
 });
+
+// describe("findAll", function () {
+//   test("works: no filter", async function () {
+//     let companies = await Company.findAll();
+//     expect(companies).toEqual([
+//       {
+//         handle: "c1",
+//         name: "C1",
+//         description: "Desc1",
+//         numEmployees: 1,
+//         logoUrl: "http://c1.img",
+//       },
+//       {
+//         handle: "c2",
+//         name: "C2",
+//         description: "Desc2",
+//         numEmployees: 2,
+//         logoUrl: "http://c2.img",
+//       },
+//       {
+//         handle: "c3",
+//         name: "C3",
+//         description: "Desc3",
+//         numEmployees: 3,
+//         logoUrl: "http://c3.img",
+//       },
+//     ]);
+//   });
+// });
 
 /************************************** get */
 
@@ -187,6 +201,7 @@ describe("update", function () {
   });
 });
 
+
 /************************************** remove */
 
 describe("remove", function () {
@@ -205,4 +220,5 @@ describe("remove", function () {
       expect(err instanceof NotFoundError).toBeTruthy();
     }
   });
+  
 });

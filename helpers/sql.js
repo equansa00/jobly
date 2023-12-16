@@ -1,4 +1,4 @@
-const { BadRequestError } = require("../expressError");
+const { BadRequestError } = require("./expressError");
 
 /**
  * Generate a SQL part for updating a set of columns.

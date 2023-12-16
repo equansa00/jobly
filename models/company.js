@@ -1,7 +1,7 @@
 "use strict";
 
 const db = require("../db");
-const { BadRequestError, NotFoundError } = require("../expressError");
+const { BadRequestError, NotFoundError } = require("../helpers/expressError");
 const { sqlForPartialUpdate } = require("../helpers/sql");
 
 /** Related functions for companies. */
@@ -49,17 +49,55 @@ class Company {
    * Returns [{ handle, name, description, numEmployees, logoUrl }, ...]
    * */
 
-  static async findAll() {
-    const companiesRes = await db.query(
-          `SELECT handle,
-                  name,
-                  description,
-                  num_employees AS "numEmployees",
-                  logo_url AS "logoUrl"
-           FROM companies
-           ORDER BY name`);
+  // static async findAll() {
+  //   const companiesRes = await db.query(
+  //         `SELECT handle,
+  //                 name,
+  //                 description,
+  //                 num_employees AS "numEmployees",
+  //                 logo_url AS "logoUrl"
+  //          FROM companies
+  //          ORDER BY name`);
+  //   return companiesRes.rows;
+  // }
+
+  static async findAll(filters) {
+    let query = `SELECT handle, name, description, num_employees AS "numEmployees", logo_url AS "logoUrl" FROM companies`;
+    let whereExpressions = [];
+    let queryValues = [];
+  
+    // Existing logic for adding filters to the query
+    if (filters.name) {
+      queryValues.push(`%${filters.name}%`);
+      whereExpressions.push(`name ILIKE $${queryValues.length}`);
+    }
+  
+    if (filters.minEmployees) {
+      queryValues.push(+filters.minEmployees);
+      whereExpressions.push(`num_employees >= $${queryValues.length}`);
+    }
+  
+    if (filters.maxEmployees) {
+      queryValues.push(+filters.maxEmployees);
+      whereExpressions.push(`num_employees <= $${queryValues.length}`);
+    }
+  
+    if (whereExpressions.length > 0) {
+      query += " WHERE " + whereExpressions.join(" AND ");
+    }
+  
+    query += " ORDER BY name";
+
+    // Add console logs for debugging
+    console.log("Final query:", query);
+    console.log("Query values:", queryValues);
+
+    // Execute the query and return the result
+    const companiesRes = await db.query(query, queryValues);
     return companiesRes.rows;
-  }
+}
+
+  
 
   /** Given a company handle, return data about company.
    *

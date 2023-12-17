@@ -179,3 +179,10 @@ class Company {
 
 
 module.exports = Company;
+
+
+//improvements
+//1.Directly interpolating variables into SQL queries (WHERE handle = ${handleVarIdx}) can introduce the risk of SQL injection. It's safer to use parameterized queries with placeholders to avoid this risk.
+//2.The remove method doesn't handle the case where the company is not found after deletion
+//3.The remove method could be more consistent with other methods by returning an object with a message property indicating the success of the deletion
+//4.Consider encapsulating the SQL queries and query-building logic within the db module or a dedicated module to further abstract away database details.

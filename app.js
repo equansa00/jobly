@@ -45,3 +45,7 @@ app.use(function (err, req, res, next) {
 });
 
 module.exports = app;
+
+//suggestions
+//1.The versions of external dependencies (dotenv, express, cors, etc.) are not specified 
+//2.Replace magic strings with constants for better maintainability

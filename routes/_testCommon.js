@@ -4,6 +4,9 @@ const db = require("../db.js");
 const User = require("../models/user");
 const Company = require("../models/company");
 const { createToken } = require("../helpers/tokens");
+const bcrypt = require('bcrypt');
+
+const BCRYPT_WORK_FACTOR = 1;
 
 async function commonBeforeAll() {
   // noinspection SqlWithoutWhere
@@ -60,6 +63,61 @@ async function commonBeforeAll() {
     password: "password3",
     isAdmin: false,
   });
+
+  await User.register({
+    username: "adminUser",
+    password: "password",
+    firstName: "Admin",
+    lastName: "User",
+    email: "admin@test.com",
+    isAdmin: true,
+});
+
+await User.register({
+    username: "regularUser",
+    password: "password",
+    firstName: "Regular",
+    lastName: "User",
+    email: "user@test.com",
+    isAdmin: false,
+});
+
+await User.register({
+  username: "validUser",
+  password: "password",
+  firstName: "FirstName",
+  lastName: "LastName",
+  email: "validUser@example.com",
+  isAdmin: false,  
+});
+
+await User.register({
+  username: "testuser",
+  password: "password",
+  firstName: "Test",
+  lastName: "User",
+  email: "testuser@test.com",
+  isAdmin: false,
+});
+
+await User.register({
+  username: "testadmin",
+  password: "password",
+  firstName: "Test",
+  lastName: "Admin",
+  email: "testadmin@test.com",
+  isAdmin: true,
+});
+
+await User.register({
+  username: "otherExistingUser",
+  firstName: "Other",
+  lastName: "User",
+  email: "otheruser@example.com",
+  password: "password",
+  isAdmin: false,
+});
+
 }
 
 async function commonBeforeEach() {
@@ -74,8 +132,25 @@ async function commonAfterAll() {
   await db.end();
 }
 
-
 const u1Token = createToken({ username: "u1", isAdmin: false });
+console.log("u1Token created:", u1Token);
+
+const adminToken = createToken({ username: "adminUser", isAdmin: true });
+console.log("adminToken created:", adminToken);
+
+const adminUser = { username: "admin", isAdmin: true };
+console.log("admin created:", adminUser);
+
+const nonAdminToken = createToken({ username: "someNonAdminUser", isAdmin: false });
+console.log("nonAdminToken created:", nonAdminToken);
+
+const testUserToken = createToken({ username: "testuser", isAdmin: false });
+console.log("testUserToken created:", testUserToken);
+
+const testAdminToken = createToken({ username: "testadmin", isAdmin: true });
+console.log("testAdminToken created:", testAdminToken);
+
+
 
 
 module.exports = {
@@ -84,4 +159,8 @@ module.exports = {
   commonAfterEach,
   commonAfterAll,
   u1Token,
+  adminToken,
+  testUserToken,
+  testAdminToken,
+  nonAdminToken,
 };

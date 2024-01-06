@@ -49,11 +49,13 @@ describe("authenticateJWT", function () {
     const req = { headers: { authorization: `Bearer ${badJwt}` } };
     const res = { locals: {} };
     const next = function (err) {
-      expect(err).toBeFalsy();
+      expect(err instanceof UnauthorizedError).toBeTruthy(); // Expect an UnauthorizedError
     };
     authenticateJWT(req, res, next);
-    expect(res.locals).toEqual({});
+    expect(res.locals).toEqual({}); // Expecting locals to be empty as token is invalid
   });
+  
+
 });
 
 

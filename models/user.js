@@ -22,32 +22,33 @@ class User {
    **/
 
   static async authenticate(username, password) {
-    // try to find the user first
     const result = await db.query(
-          `SELECT username,
-                  password,
-                  first_name AS "firstName",
-                  last_name AS "lastName",
-                  email,
-                  is_admin AS "isAdmin"
-           FROM users
-           WHERE username = $1`,
-        [username],
+      `SELECT username,
+              password,
+              first_name AS "firstName",
+              last_name AS "lastName",
+              email,
+              is_admin AS "isAdmin"
+       FROM users
+       WHERE username = $1`,
+      [username],
     );
-
+  
     const user = result.rows[0];
-
+  
+    console.log(`Fetched user: `, user);
+    console.log(`Attempting to authenticate with password: ${password}`);
     if (user) {
-      // compare hashed password to a new hash from password
       const isValid = await bcrypt.compare(password, user.password);
       if (isValid === true) {
         delete user.password;
         return user;
       }
     }
-
+  
     throw new UnauthorizedError("Invalid username/password");
   }
+  
 
   /** Register user with data.
    *
@@ -124,23 +125,28 @@ class User {
    **/
 
   static async get(username) {
-    const userRes = await db.query(
-          `SELECT username,
-                  first_name AS "firstName",
-                  last_name AS "lastName",
-                  email,
-                  is_admin AS "isAdmin"
-           FROM users
-           WHERE username = $1`,
-        [username],
-    );
-
-    const user = userRes.rows[0];
-
-    if (!user) throw new NotFoundError(`No user: ${username}`);
-
-    return user;
+    try {
+      console.log(`[User.get] Fetching user with username: ${username}`);
+  
+      const userRes = await db.query(
+        `SELECT username, first_name AS "firstName", last_name AS "lastName", email, is_admin AS "isAdmin"
+         FROM users WHERE username = $1`, [username]
+      );
+  
+      const user = userRes.rows[0];
+      console.log("[User.get] User fetched:", user);
+  
+      if (!user) {
+        throw new NotFoundError(`No user: ${username}`);
+      }
+  
+      return user;
+    } catch (err) {
+      console.error("[User.get] Error fetching user:", err);
+      throw err; 
+    }
   }
+  
 
   /** Update user data with `data`.
    *

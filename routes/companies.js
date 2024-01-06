@@ -2,14 +2,11 @@
 
 /** Routes for companies. */
 
-
 const jsonschema = require("jsonschema");
 const express = require("express");
-
-const { ExpressError, BadRequestError } = require('../helpers/expressError');
-const { ensureLoggedIn } = require("../middleware/auth");
+const { BadRequestError } = require('../helpers/expressError');
+const { isAdmin } = require('../middleware/auth');
 const Company = require("../models/company");
-
 const companyNewSchema = require("../schemas/companyNew.json");
 const companyUpdateSchema = require("../schemas/companyUpdate.json");
 
@@ -22,10 +19,9 @@ const router = new express.Router();
  *
  * Returns { handle, name, description, numEmployees, logoUrl }
  *
- * Authorization required: login
+ * Authorization required: admin
  */
-
-router.post("/", ensureLoggedIn, async function (req, res, next) {
+router.post("/", isAdmin, async function (req, res, next) {
   try {
     const validator = jsonschema.validate(req.body, companyNewSchema);
     if (!validator.valid) {
@@ -50,24 +46,19 @@ router.post("/", ensureLoggedIn, async function (req, res, next) {
  *
  * Authorization required: none
  */
-
 router.get("/", async function (req, res, next) {
   try {
     const filters = req.query;
-    console.log("Filters received:", filters);
-
     if (filters.minEmployees && filters.maxEmployees && +filters.minEmployees > +filters.maxEmployees) {
-      throw new ExpressError("minEmployees cannot be greater than maxEmployees", 400);
+      throw new BadRequestError("minEmployees cannot be greater than maxEmployees");
     }
 
     const companies = await Company.findAll(filters);
     return res.json({ companies });
   } catch (err) {
-    console.error("Error in GET /companies:", err);
     return next(err);
   }
 });
-
 
 /** GET /[handle]  =>  { company }
  *
@@ -76,7 +67,6 @@ router.get("/", async function (req, res, next) {
  *
  * Authorization required: none
  */
-
 router.get("/:handle", async function (req, res, next) {
   try {
     const company = await Company.get(req.params.handle);
@@ -94,11 +84,11 @@ router.get("/:handle", async function (req, res, next) {
  *
  * Returns { handle, name, description, numEmployees, logo_url }
  *
- * Authorization required: login
+ * Authorization required: admin
  */
-
-router.patch("/:handle", ensureLoggedIn, async function (req, res, next) {
+router.patch("/:handle", isAdmin, async function (req, res, next) {
   try {
+    
     const validator = jsonschema.validate(req.body, companyUpdateSchema);
     if (!validator.valid) {
       const errs = validator.errors.map(e => e.stack);
@@ -114,10 +104,9 @@ router.patch("/:handle", ensureLoggedIn, async function (req, res, next) {
 
 /** DELETE /[handle]  =>  { deleted: handle }
  *
- * Authorization: login
+ * Authorization required: admin
  */
-
-router.delete("/:handle", ensureLoggedIn, async function (req, res, next) {
+router.delete("/:handle", isAdmin, async function (req, res, next) {
   try {
     await Company.remove(req.params.handle);
     return res.json({ deleted: req.params.handle });
@@ -125,6 +114,5 @@ router.delete("/:handle", ensureLoggedIn, async function (req, res, next) {
     return next(err);
   }
 });
-
 
 module.exports = router;

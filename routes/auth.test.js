@@ -112,3 +112,33 @@ describe("POST /auth/register", function () {
     expect(resp.statusCode).toEqual(400);
   });
 });
+
+
+describe("POST /auth/login", () => {
+  test("Successful login returns a token", async () => {
+    const response = await request(app)
+      .post("/auth/login")
+      .send({ username: "validUser", password: "password" });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toHaveProperty("token");
+  });
+
+  test("Unsuccessful login due to wrong password", async () => {
+    const response = await request(app)
+      .post("/auth/login")
+      .send({ username: "validUser", password: "wrongPassword" });
+
+    expect(response.statusCode).toBe(401);
+    expect(response.body).not.toHaveProperty("token");
+  });
+
+  test("Unsuccessful login due to non-existent user", async () => {
+    const response = await request(app)
+      .post("/auth/login")
+      .send({ username: "nonExistentUser", password: "anyPassword" });
+
+    expect(response.statusCode).toBe(401);
+    expect(response.body).not.toHaveProperty("token");
+  });
+});

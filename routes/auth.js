@@ -63,4 +63,33 @@ router.post("/register", async function (req, res, next) {
 });
 
 
+router.post('/login', async function(req, res, next) {
+  try {
+      console.log("Login Request Body:", req.body);
+
+      const validator = jsonschema.validate(req.body, userAuthSchema);
+      if (!validator.valid) {
+          const errs = validator.errors.map(e => e.stack);
+          throw new BadRequestError(errs);
+      }
+
+      const { username, password } = req.body;
+      console.log(`Attempting to authenticate user: ${username}`);
+
+      const user = await User.authenticate(username, password);
+      console.log(`User authenticated:`, user);
+
+      const token = createToken(user);
+      console.log(`Token generated: ${token}`);
+
+      console.log(`Sending response with token`);
+      return res.json({ token });
+  } catch (err) {
+      console.error("Login error:", err);
+      return next(err);
+  }
+});
+
+
+
 module.exports = router;

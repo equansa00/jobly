@@ -33,4 +33,18 @@ describe("createToken", function () {
       isAdmin: false,
     });
   });
+
+  describe("JWT Token Creation", () => {
+    test("Token for Regular User", () => {
+      const token = createToken({ username: "user", isAdmin: false });
+      const payload = jwt.verify(token, SECRET_KEY);
+      expect(payload.isAdmin).toBe(false);
+    });
+  
+    test("Token for Admin User", () => {
+      const token = createToken({ username: "admin", isAdmin: true });
+      const payload = jwt.verify(token, SECRET_KEY);
+      expect(payload.isAdmin).toBe(true);
+    });
+  });
 });

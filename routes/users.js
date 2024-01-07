@@ -5,6 +5,7 @@ const jsonschema = require("jsonschema");
 const express = require("express");
 const { BadRequestError } = require("../helpers/expressError");
 const User = require("../models/user");
+const Job = require('../models/job'); 
 const { createToken } = require("../helpers/tokens");
 const userNewSchema = require("../schemas/userNew.json");
 const userUpdateSchema = require("../schemas/userUpdate.json");
@@ -140,5 +141,28 @@ router.delete("/:username", ensureLoggedIn, async function (req, res, next) {
   }
 });
 
+
+// POST route for a user to apply for a job
+router.post("/:username/jobs/:id", ensureLoggedIn, isAdminOrTargetUser, async (req, res, next) => {
+  try {
+      const { username, id } = req.params;
+
+      // Check if the job exists
+      const job = await Job.get(id);
+      if (!job) {
+          throw new NotFoundError(`No job with id: ${id}`);
+      }
+
+      // Apply for the job
+      await User.applyForJob(username, id);
+
+      return res.status(201).json({ applied: id });
+  } catch (err) {
+      if (err.code === '23505') { // Unique constraint failed (user already applied)
+          return next(new BadRequestError("Already applied for this job"));
+      }
+      return next(err);
+  }
+});
 
 module.exports = router;

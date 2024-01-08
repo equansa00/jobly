@@ -22,6 +22,9 @@ class User {
    **/
 
   static async authenticate(username, password) {
+    // Log the start of the authentication process
+    console.log(`[User.authenticate] Start authentication for username: ${username}`);
+
     const result = await db.query(
       `SELECT username,
               password,
@@ -33,19 +36,28 @@ class User {
        WHERE username = $1`,
       [username],
     );
-  
+
     const user = result.rows[0];
-  
-    console.log(`Fetched user: `, user);
-    console.log(`Attempting to authenticate with password: ${password}`);
+
+    // Log the fetched user details (excluding password)
+    if (user) {
+      console.log(`[User.authenticate] Fetched user: `, {...user, password: 'HIDDEN'});
+    } else {
+      console.log(`[User.authenticate] No user found with username: ${username}`);
+    }
+
     if (user) {
       const isValid = await bcrypt.compare(password, user.password);
+      console.log(`[User.authenticate] Password validation result for ${username}: ${isValid}`);
+
       if (isValid === true) {
         delete user.password;
         return user;
       }
     }
-  
+
+    // Log invalid login attempt
+    console.log(`[User.authenticate] Invalid username/password for: ${username}`);
     throw new UnauthorizedError("Invalid username/password");
   }
   
@@ -210,6 +222,8 @@ class User {
 
     if (!user) throw new NotFoundError(`No user: ${username}`);
   }
+
+  
 }
 
 

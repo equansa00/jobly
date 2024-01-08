@@ -16,6 +16,8 @@ const usersRoutes = require("./routes/users");
 
 const morgan = require("morgan");
 
+const jobsRoutes = require("./routes/jobs"); 
+
 const app = express();
 
 app.use(cors());
@@ -26,7 +28,7 @@ app.use(authenticateJWT);
 app.use("/auth", authRoutes);
 app.use("/companies", companiesRoutes);
 app.use("/users", usersRoutes);
-
+app.use("/jobs", jobsRoutes);
 
 /** Handle 404 errors -- this matches everything */
 app.use(function (req, res, next) {
@@ -46,5 +48,3 @@ app.use(function (err, req, res, next) {
 
 module.exports = app;
 
-//suggestions
-//1.Replace magic strings with constants for better maintainability

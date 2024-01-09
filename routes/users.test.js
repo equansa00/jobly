@@ -4,8 +4,43 @@
 
 // routes/users.test.js
 const request = require("supertest");
+const bcrypt = require('bcrypt');
+const db = require('../db');
 const app = require("../app");
-const { nonAdminToken } = require('./_testCommon.js');
+
+const { generateTokenForUser } = require('../helpers/generateTokenForUser');
+const { nonAdminToken, setupData, validJobId, userToken } = require('./_testCommon.js');
+
+const SALT_ROUNDS = 10;
+
+async function encryptPassword(password) {
+  return await bcrypt.hash(password, SALT_ROUNDS);
+}
+
+
+async function insertTestUser(username) {
+  const password = await encryptPassword('password');
+  await db.query(`INSERT INTO users (username, password, first_name, last_name, email, is_admin) VALUES ($1, $2, 'Test', 'User', 'testuser@test.com', false)`, [username, password]);
+}
+
+
+async function getValidJobId() {
+  let result = await db.query('SELECT id FROM jobs ORDER BY id LIMIT 1');
+  if (result.rows.length === 0) {
+    // Insert a default job record if none exists
+    const insertResult = await db.query(`
+      INSERT INTO jobs (title, salary, equity, company_handle)
+      VALUES ('Default Job', 100000, 0, 'c1')
+      RETURNING id`);
+    return insertResult.rows[0].id;
+  }
+  return result.rows[0].id;
+}
+
+
+beforeAll(async () => {
+  await setupData();
+});
 
 const {
   commonBeforeAll,
@@ -98,6 +133,7 @@ describe("GET /users/:username", function () {
         firstName: "Test",
         lastName: "User",
         email: "testuser@test.com",
+        jobs: [],
         isAdmin: false
       }
     });
@@ -121,6 +157,7 @@ describe("GET /users/:username", function () {
         firstName: "Test",
         lastName: "User",
         email: "testuser@test.com",
+        jobs: [],
         isAdmin: false
       }
     });
@@ -195,6 +232,61 @@ describe("DELETE /users/:username", function () {
   });
 });
 
+describe("POST /users/:username/jobs/:id", function () {
+  let validUsername;
+  let validJobId;
+  let userToken;
+  const invalidJobId = 999999;
+
+  beforeAll(async () => {
+    // Setup code...
+    validUsername = 'testUser'; // Ensure this is a valid username
+    validJobId = await getValidJobId();
+    userToken = await generateTokenForUser(validUsername);
+    await insertTestUser(validUsername);
+  });
+
+  
+  async function insertTestUser(username) {
+    const password = await encryptPassword('password');
+    await db.query(`INSERT INTO users (username, password, first_name, last_name, email, is_admin) VALUES ($1, $2, 'Test', 'User', 'testuser@example.com', false)`, [username, password]);
+  }
+
+  test("user successfully applies for a job", async function () {
+    const response = await request(app)
+      .post(`/users/${validUsername}/jobs/${validJobId}`)
+      .set("authorization", `Bearer ${userToken}`);
+    expect(response.statusCode).toBe(201);
+    expect(response.body).toEqual({ applied: validJobId.toString() }); // Convert validJobId to a string
+  });
+  
+
+  test("admin applies for a job on behalf of a user", async function () {
+    const response = await request(app)
+      .post(`/users/${validUsername}/jobs/${validJobId}`)
+      .set("authorization", `Bearer ${adminToken}`);
+    expect(response.statusCode).toBe(201);
+    expect(response.body).toEqual({ applied: validJobId.toString() });
+  });
+
+  test("applying to a non-existent job", async function () {
+    const response = await request(app)
+      .post(`/users/${validUsername}/jobs/${invalidJobId}`)
+      .set("authorization", `Bearer ${userToken}`);
+    expect(response.statusCode).toBe(404);
+    expect(response.body.error.message).toEqual("No job found with ID: 999999"); // Updated expected message
+  });
+  
+
+  test("non-existent user applying for a job", async function () {
+    const response = await request(app)
+      .post(`/users/invalidUsername/jobs/${validJobId}`)
+      .set("authorization", `Bearer ${adminToken}`);
+    expect(response.statusCode).toBe(404);
+    expect(response.body.error.message).toEqual("No user: invalidUsername"); // Update the expected message
+  });
+  
+});
 
 
 
@@ -202,6 +294,11 @@ describe("DELETE /users/:username", function () {
 
 
 
+
+
+
+
+// ___________________________________________________________________________________________________________________________________________________________________________________________________________________________________
 
 // ORIGINAL TEST. ONLY REVERT BACK AS NEEDED
 

@@ -6,6 +6,9 @@ const Company = require("../models/company");
 const { createToken } = require("../helpers/tokens");
 const bcrypt = require('bcrypt');
 
+let validJobId;
+
+
 const BCRYPT_WORK_FACTOR = 1;
 
 async function commonBeforeAll() {
@@ -117,6 +120,12 @@ await User.register({
   password: "password",
   isAdmin: false,
 });
+}
+
+async function setupData() {
+  // ... include other setup tasks ...
+
+  // Set up validJobId by fetching the first job's ID from the test database
 
 }
 
@@ -151,8 +160,6 @@ const testAdminToken = createToken({ username: "testadmin", isAdmin: true });
 console.log("testAdminToken created:", testAdminToken);
 
 
-
-
 module.exports = {
   commonBeforeAll,
   commonBeforeEach,
@@ -163,4 +170,6 @@ module.exports = {
   testUserToken,
   testAdminToken,
   nonAdminToken,
+  setupData,
+  validJobId,
 };

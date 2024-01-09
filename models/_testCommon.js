@@ -42,10 +42,19 @@ async function commonAfterAll() {
   await db.end();
 }
 
+async function addTestJob() {
+  // Add a test job to the database and return its ID
+  const result = await db.query(`
+    INSERT INTO jobs (title, salary, equity, company_handle)
+    VALUES ('Test Job', 100000, '0', 'c1')
+    RETURNING id`);
+  return result.rows[0].id;
+}
 
 module.exports = {
   commonBeforeAll,
   commonBeforeEach,
   commonAfterEach,
   commonAfterAll,
+  addTestJob,
 };

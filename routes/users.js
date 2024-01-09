@@ -145,23 +145,37 @@ router.delete("/:username", ensureLoggedIn, async function (req, res, next) {
 // POST route for a user to apply for a job
 router.post("/:username/jobs/:id", ensureLoggedIn, isAdminOrTargetUser, async (req, res, next) => {
   try {
-      const { username, id } = req.params;
+    const { username, id } = req.params;
 
-      // Check if the job exists
-      const job = await Job.get(id);
-      if (!job) {
-          throw new NotFoundError(`No job with id: ${id}`);
-      }
+    console.log(`Received job application request for user: ${username}, job ID: ${id}`);
 
-      // Apply for the job
-      await User.applyForJob(username, id);
+    // Check if user exists
+    const user = await User.get(username); // Assuming User.get() checks for user existence
+    if (!user) {
+      return res.status(404).json({ error: { message: "No user found" } });
+    }
 
-      return res.status(201).json({ applied: id });
+    // Check if the job exists
+    const job = await Job.get(id); // Assuming Job.get() checks for job existence
+    if (!job) {
+      throw new NotFoundError(`No job with id: ${id}`);
+    }
+    console.log('Job found:', job);
+
+    // Apply for the job
+    const applyResult = await User.applyToJob(username, id);
+    console.log('User applied to job. Result:', applyResult);
+
+    return res.status(201).json({ applied: id });
+
   } catch (err) {
-      if (err.code === '23505') { // Unique constraint failed (user already applied)
-          return next(new BadRequestError("Already applied for this job"));
-      }
-      return next(err);
+    console.error('Error in job application route:', err);
+
+    if (err.code === '23505') {
+      // Unique constraint failed (user already applied)
+      return next(new BadRequestError("Already applied for this job"));
+    }
+    return next(err);
   }
 });
 

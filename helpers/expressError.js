@@ -44,10 +44,24 @@ class ForbiddenError extends ExpressError {
   }
 }
 
+class DatabaseError extends Error {
+  constructor(message) {
+    super(message); // Pass message to the parent Error constructor
+    this.name = "DatabaseError"; // Custom name for the error
+    this.status = 500; // You can set a default HTTP status code for database errors
+
+    // Maintains proper stack trace for where the error was thrown (only available on V8)
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, DatabaseError);
+    }
+  }
+}
+
 module.exports = {
   ExpressError,
   NotFoundError,
   UnauthorizedError,
   BadRequestError,
   ForbiddenError,
+  DatabaseError,
 };

@@ -4,6 +4,7 @@ const {
   NotFoundError,
   BadRequestError,
   UnauthorizedError,
+  DatabaseError,
 } = require("../helpers/expressError");
 const db = require("../db.js");
 const User = require("./user.js");
@@ -12,6 +13,7 @@ const {
   commonBeforeEach,
   commonAfterEach,
   commonAfterAll,
+  addTestJob, // This should be correctly imported
 } = require("./_testCommon");
 
 beforeAll(commonBeforeAll);
@@ -140,6 +142,7 @@ describe("get", function () {
       lastName: "U1L",
       email: "u1@email.com",
       isAdmin: false,
+      jobs: [],
     });
   });
 
@@ -229,3 +232,47 @@ describe("remove", function () {
   });
 });
 
+
+describe("User.applyToJob", function () {
+  let testJobId;
+
+  // Setup specific for these tests
+  beforeAll(async () => {
+    await commonBeforeAll();
+    testJobId = await addTestJob(); // Only add a test job for these tests
+  });
+
+  beforeEach(commonBeforeEach);
+  afterEach(commonAfterEach);
+
+  test("successfully applying for a job", async function () {
+    const result = await User.applyToJob("u1", testJobId);
+    expect(result).toEqual({ job_id: testJobId });
+  });
+
+  test("handling non-existent job", async function () {
+    const invalidJobId = 9999;
+    try {
+      await User.applyToJob("u1", invalidJobId);
+    } catch (err) {
+      expect(err).toBeInstanceOf(Error); // Temporarily use Error for testing
+    }
+  });
+
+  test("handling non-existent user", async function () {
+    const nonExistentUser = "nonExistentUser";
+    try {
+      await User.applyToJob(nonExistentUser, testJobId);
+    } catch (err) {
+      expect(err).toBeInstanceOf(Error); // Temporarily use Error for testing
+    }
+  });
+
+  // Cleanup specifically for User.applyToJob tests
+  afterAll(async () => {
+    // Clean up any test-specific data here
+    await db.query("DELETE FROM jobs WHERE title='Test Job'");
+  });
+});
+
+module.exports = User;

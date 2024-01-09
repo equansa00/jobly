@@ -137,26 +137,26 @@ class User {
    **/
 
   static async get(username) {
-    try {
-      console.log(`[User.get] Fetching user with username: ${username}`);
-  
-      const userRes = await db.query(
-        `SELECT username, first_name AS "firstName", last_name AS "lastName", email, is_admin AS "isAdmin"
-         FROM users WHERE username = $1`, [username]
-      );
-  
-      const user = userRes.rows[0];
-      console.log("[User.get] User fetched:", user);
-  
-      if (!user) {
-        throw new NotFoundError(`No user: ${username}`);
-      }
-  
-      return user;
-    } catch (err) {
-      console.error("[User.get] Error fetching user:", err);
-      throw err; 
+    const userRes = await db.query(
+      `SELECT username, first_name AS "firstName", last_name AS "lastName", email, is_admin AS "isAdmin"
+       FROM users WHERE username = $1`, [username]
+    );
+
+    const user = userRes.rows[0];
+
+    if (!user) {
+      throw new NotFoundError(`No user: ${username}`);
     }
+
+    // Additional query to fetch job applications
+    const applicationsRes = await db.query(
+      `SELECT job_id FROM applications WHERE username = $1`, [username]
+    );
+
+    // Adding job IDs to the user object
+    user.jobs = applicationsRes.rows.map(row => row.job_id);
+
+    return user;
   }
   
 
@@ -223,6 +223,14 @@ class User {
     if (!user) throw new NotFoundError(`No user: ${username}`);
   }
 
+  static async applyToJob(username, jobId) {
+    const result = await db.query(
+      `INSERT INTO applications (username, job_id)
+       VALUES ($1, $2)
+       RETURNING job_id`, [username, jobId]);
+    return result.rows[0];
+  }
+  
   
 }
 
